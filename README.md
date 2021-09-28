@@ -2,4 +2,4 @@
 
 cmpc: Continuous measurement of photocurrent <br/>
 sspc: Steady-state photocurrent <br/>
-<img src="sspc.png" height="100px">
+<img src="sspc.png" height="300px">
