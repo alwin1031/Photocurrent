@@ -1,5 +1,8 @@
 # Photocurrent
-
-cmpc: Continuous measurement of photocurrent <br/>
-sspc: Steady-state photocurrent <br/>
-<img src="sspc.png" height="300px">
+<ul>
+  <li><code>cmpc.py</code>: Continuous measurement of photocurrent
+  <li>sspc: Steady-state photocurrent</li>
+</ul>
+<p>
+  <img src="sspc.png" width="400px">
+</p>
