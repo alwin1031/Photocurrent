@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Offline steady-state photocurrent analysis based on sspc.py.">
+  <title>SSPC Studio · Steady-state analysis</title>
+  <style>/* STYLE */</style>
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="#" aria-label="SSPC Studio home"><span class="brand-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15h4l3-9 4 13 3-9h4"/></svg></span><strong>SSPC <span>Studio</span></strong><span class="version">1.1</span></a>
+    <div class="local-badge"><span></span> Runs locally · No uploads</div>
+    <button class="text-button" id="methodButton">How it works <span aria-hidden="true">↗</span></button>
+  </header>
+  <main class="workspace">
+    <aside class="sidebar" aria-label="Analysis controls">
+      <div class="sidebar-heading"><span class="eyebrow">WORKSPACE</span><h1>Steady-state<br> analysis<span class="purple">.</span></h1><p>From waveform to response time.</p></div>
+      <section class="control-section">
+        <div class="section-label"><span class="step">1</span><h2>Measurement</h2></div>
+        <input id="fileInput" type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" class="visually-hidden">
+        <button class="drop-zone" id="dropZone"><svg class="upload-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></svg><strong id="dropTitle">Choose a CSV file</strong><span id="dropSubtitle">or drop it here · up to 20 MB</span></button>
+        <button class="sample-button" id="sampleButton"><span aria-hidden="true">◈</span> Try sample measurement <span aria-hidden="true">→</span></button>
+        <p class="file-format">Supports oscilloscope exports and CSV files with <code>Time</code> and <code>Ampl</code> columns.</p>
+      </section>
+      <section class="control-section settings-section">
+        <div class="section-label"><span class="step">2</span><h2>Analysis settings</h2><button class="mini-button" id="resetSettings" title="Restore the original script settings">Reset</button></div>
+        <form id="settingsForm">
+          <label for="plotTitle">Plot title</label><input id="plotTitle" type="text" placeholder="Measurement name" maxlength="100" autocomplete="off">
+          <div class="field-grid">
+            <div><label for="gain">Scale factor</label><input id="gain" type="number" value="200" step="any" required><small>Raw signal → nA</small></div>
+            <div><label for="baseline">Baseline samples</label><input id="baseline" type="number" value="1000" min="1" max="200000" step="1" required><small>First N measurements</small></div>
+          </div>
+          <div class="field-grid">
+            <div><label for="lightOn">Light on <span>(s)</span></label><input id="lightOn" type="number" value="0" step="any" required></div>
+            <div><label for="lightOff">Light off <span>(s)</span></label><input id="lightOff" type="number" value="0.85" step="any" required></div>
+          </div>
+          <label class="fit-toggle" for="fitEnabled"><span><strong>Fit exponential curves</strong><small>Turn off to show corrected data only.</small></span><input id="fitEnabled" type="checkbox" role="switch" checked><i aria-hidden="true"></i></label>
+          <details class="advanced"><summary>Advanced settings <span aria-hidden="true">+</span></summary><div class="advanced-fields">
+            <label for="timeUnit">Time unit in your CSV</label><select id="timeUnit"><option value="s">Seconds (s)</option><option value="ms">Milliseconds (ms)</option><option value="us">Microseconds (µs)</option></select>
+            <label for="peakWindow">Peak search window <span>(samples)</span></label><input id="peakWindow" type="number" value="250" min="1" max="200000" step="1" required><small>Search the start of each light interval for the largest absolute signal.</small>
+          </div></details>
+          <button type="submit" class="primary-button" id="analyzeButton" disabled><span class="run-icon" aria-hidden="true">▶</span><span id="analyzeLabel">Analyze measurement</span></button>
+        </form>
+        <p class="settings-note">Defaults follow your original <code>sspc.py</code>.</p>
+      </section>
+      <div class="sidebar-footer"><span class="tiny-dot"></span><span>Private by design<br><small>Your data stays in this browser tab.</small></span></div>
+    </aside>
+    <div class="main-content">
+      <div class="content-heading"><div><span class="eyebrow">PHOTOCURRENT WORKBENCH</span><h2 id="measurementHeading">Your next measurement</h2><p id="measurementDescription">Load a waveform to explore its light response.</p></div><span class="status-badge" id="statusBadge">Ready to begin</span></div>
+      <div id="errorBox" class="error-box" role="alert" hidden></div>
+      <div class="stats-strip" aria-label="Measurement summary">
+        <div><span>MEASUREMENTS</span><strong id="statCount">—</strong></div><div><span>TIME WINDOW</span><strong id="statRange">— <small>s</small></strong></div><div><span>MEAN SPACING</span><strong id="statSpacing">—</strong></div><div><span>RAW BASELINE</span><strong id="statBaseline">—</strong></div>
+      </div>
+      <section class="chart-card" aria-labelledby="chartHeading">
+        <div class="chart-header"><div><h3 id="chartHeading">Photocurrent response</h3><p id="chartDescription">Baseline corrected · Single-exponential fit</p></div><div class="chart-actions"><button id="resetView" class="mini-button" disabled title="Show the full measurement">Reset view</button><button id="plotSettingsButton" class="icon-button" title="Plot settings" aria-label="Plot settings" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6m8 4v6"/></svg></button></div></div>
+        <div class="plot-settings" id="plotSettings" hidden><label for="yMode">Vertical scale</label><select id="yMode"><option value="auto">Automatic</option><option value="manual">Custom limits</option><option value="original">Original: −4 to 6 nA</option></select><label for="yMin">Min (nA)</label><input type="number" id="yMin" value="-4" step="any" disabled><label for="yMax">Max (nA)</label><input type="number" id="yMax" value="6" step="any" disabled></div>
+        <div class="chart-shell" id="chartShell">
+          <div class="empty-state" id="emptyState"><div class="empty-wave"><svg viewBox="0 0 160 75" aria-hidden="true"><path class="empty-axis" d="M5 55h150M30 5v60"/><path d="M5 53h25l2-37c7 19 13 25 22 26h28l2 24c5-9 12-13 25-13h46"/></svg></div><h4>A signal worth exploring.</h4><p>Choose your CSV on the left, or start<br>with the included HEBR measurement.</p><button id="emptySample" class="secondary-button">Explore sample <span aria-hidden="true">→</span></button></div>
+          <svg id="chart" viewBox="0 0 1000 440" role="img" aria-label="Corrected photocurrent and fitted light responses" hidden></svg>
+          <div id="chartTooltip" class="chart-tooltip" hidden></div>
+        </div>
+        <div class="chart-footer"><div class="legend"><label><input id="showSignal" type="checkbox" checked><i class="legend-line signal"></i>Measured</label><label><input id="showOn" type="checkbox" checked><i class="legend-line on"></i>Light on fit</label><label><input id="showOff" type="checkbox" checked><i class="legend-line off"></i>Light off fit</label><span><i class="legend-area"></i>Light on</span></div><span class="chart-hint" id="chartHint">Hover to inspect · Scroll to zoom</span></div>
+      </section>
+      <p id="fitDisabledNote" class="fit-disabled-note" hidden>Fitting is off. The plot and exports contain baseline-corrected measurements without fitted curves or response times.</p>
+      <div class="results-heading" id="responseHeading"><h3>Response times</h3><span>t½ = τ × ln(2)</span></div>
+      <div class="fit-grid" id="fitResults">
+        <section class="fit-card on-card" id="onCard" aria-label="Light-on results"><div class="fit-card-header"><h4><span class="phase-symbol" aria-hidden="true">☼</span> Light on</h4><span id="onQuality" class="quality">Awaiting data</span></div><div class="fit-values"><div><label>Time constant, τ</label><strong id="onTau">— <small>s</small></strong></div><div><label>Half-time, t½</label><strong id="onHalf">— <small>s</small></strong></div></div><div class="fit-detail"><span>R² <b id="onR2">—</b></span><span>Peak <b id="onPeak">—</b></span><span>Fit samples <b id="onSamples">—</b></span></div><p id="onNote" class="fit-note" hidden></p></section>
+        <section class="fit-card off-card" id="offCard" aria-label="Light-off results"><div class="fit-card-header"><h4><span class="phase-symbol" aria-hidden="true">☾</span> Light off</h4><span id="offQuality" class="quality">Awaiting data</span></div><div class="fit-values"><div><label>Time constant, τ</label><strong id="offTau">— <small>s</small></strong></div><div><label>Half-time, t½</label><strong id="offHalf">— <small>s</small></strong></div></div><div class="fit-detail"><span>R² <b id="offR2">—</b></span><span>Peak <b id="offPeak">—</b></span><span>Fit samples <b id="offSamples">—</b></span></div><p id="offNote" class="fit-note" hidden></p></section>
+      </div>
+      <div id="warningsBox" class="warnings-box" role="status" hidden></div>
+      <section class="export-bar"><div><span class="export-icon" aria-hidden="true">↧</span><div><h3>Take your results with you</h3><p>Publication-sized plots and complete analysis data.</p></div></div><div class="export-actions"><button class="secondary-button export-button" id="exportPNG" disabled>PNG <small>4800 × 2880</small></button><button class="secondary-button export-button" id="exportSVG" disabled>SVG</button><select id="csvKind" aria-label="Data export type"><option value="data">Corrected data</option><option value="summary">Fit summary</option><option value="json">Full analysis JSON</option></select><button class="dark-button export-button" id="exportData" disabled>Export data <span aria-hidden="true">↓</span></button></div></section>
+      <details class="data-preview" id="dataPreview"><summary>Inspect measurements <span id="previewCount">First 100 rows after analysis</span></summary><div class="table-scroll"><table><thead><tr><th>Time (s)</th><th>Raw amplitude</th><th>Photocurrent (nA)</th><th>Light on fit (nA)</th><th>Light off fit (nA)</th></tr></thead><tbody id="dataRows"></tbody></table></div></details>
+      <footer class="content-footer"><span>SSPC Studio <span aria-hidden="true">/</span> Steady-state photoconductivity</span><span id="lastAnalysis">Built around your workflow.</span></footer>
+    </div>
+  </main>
+  <dialog id="methodDialog"><div class="dialog-heading"><span class="eyebrow">THE ANALYSIS</span><button id="closeMethod" class="icon-button" aria-label="Close explanation">×</button></div><h2>From signal to time constant.</h2><p>SSPC Studio follows the baseline correction, interval grouping, peak search, and exponential model in your <code>sspc.py</code>.</p><ol><li><strong>Correct the baseline.</strong> Subtract the mean of the first N raw samples, then multiply by your scale factor. The plotted unit is nA; use a scale factor appropriate to your acquisition setup.</li><li><strong>Split by light timing.</strong> Light on includes t ≥ light-on and t &lt; light-off. Light off includes t ≥ light-off. CSV timestamps are converted to seconds before analysis.</li><li><strong>Find the starting peak.</strong> In the first 250 samples (adjustable) of each interval, find the largest absolute corrected signal. Fit from that point to the end of the interval.</li><li><strong>Fit the response.</strong> Minimize squared residuals for a positive time constant using the model below. τ is searched on a log scale; amplitude and plateau are solved at each τ.</li></ol><div class="formula">I(t) = (a − p) exp(−(t − t₀) / τ) + p</div><p class="method-small">t₀ is the detected peak time; a is the fitted signal at t₀; p is the asymptotic plateau. Half-time is τ × ln(2), measured toward the plateau. R² measures how much signal variation the model explains; it is not a confidence interval.</p><h3>Changes from the script</h3><p class="method-small">Uses actual timestamps instead of computed row offsets, consistently labels time in seconds, constrains τ to be positive, and shifts the time origin for numerical stability. Fits can differ from the original unconstrained fit. The search extends from one-twentieth of the minimum sample spacing to 10,000 times the fit interval. A boundary result is flagged.</p><p class="method-small">The chart may reduce points for display while retaining local minima and maxima. Fitting and data export use every measurement. All processing happens in this tab, with no server, analytics, or external libraries. The bundled HEBR sample comes from the test folder beside your script.</p><button id="methodDone" class="primary-button">Got it</button></dialog>
+  <dialog id="exportDialog"><div class="dialog-heading"><span class="eyebrow">EXPORT READY</span><button id="closeExport" class="icon-button" aria-label="Close export">×</button></div><h2 id="exportHeading">Your export is ready.</h2><p id="exportDescription"></p><img id="exportPreview" alt="Preview of exported photocurrent plot" hidden><p class="method-small">Choose Download to save the file. Your browser may ask where to put it.</p><a id="downloadLink" class="primary-button" download>Download file ↓</a></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <script id="analysisCore">/* CORE */</script>
+  <script id="sampleData" type="application/json">/* SAMPLE */</script>
+  <script>/* APP */</script>
+</body>
+</html>
